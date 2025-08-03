@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using WebAppsScraper;
 
 class Program
 {
@@ -106,6 +107,9 @@ class Program
         int threadCount = Environment.ProcessorCount;
         var ports = new[] { 80, 443, 8000, 8080, 8081 };
 
+        string dc = null;
+        string domain = null;
+
         foreach (var arg in args)
         {
             if (arg.StartsWith("--threads="))
@@ -152,9 +156,28 @@ class Program
                     return;
                 }
             }
+            // LDAP support
+            else if (arg.StartsWith("--dc="))
+            {
+                dc = arg.Split('=')[1];
+            }
+            else if (arg.StartsWith("--domain="))
+            {
+                domain = arg.Split('=')[1];
+            }
         }
 
-        var ipList = GetIPs(input);
+        List<string> ipList = new List<string>();
+
+        if (dc != null && domain != null)
+        {
+            ipList = DomainUtils.GetDomainComputers(dc, domain);
+        }
+        else
+        {
+
+            ipList = GetIPs(input);
+        }
 
         if (!quiet)
         {
